@@ -213,7 +213,7 @@ void emain(void* arg)
 			// io_out16 (OUT1, ( io_in16(OUT1) |  temp) );
 		}
 		else {
-			temp = 1 << 9;	// Berechnung des Bitmusters 0x0200 
+            temp = 1 <<9;	// Berechnung des Bitmusters 0x0200
 
 			temp = ~temp;	// Das Bitmuster wird bitweise
 							// invertiert, d.h. nun ist Bit 9 das
@@ -225,11 +225,11 @@ void emain(void* arg)
 		}
 
 		if(T2 == 1) {		
-			temp = 1 << 10;
+            temp = 1 << 10;
 			io_out16 (OUT1, ( io_in16(OUT1) |  temp) );
 		}		
 		else {
-			temp = 1 << 10;
+            temp = 1 << 10;
 			temp = ~temp;
 			io_out16 (OUT1, ( io_in16(OUT1) & temp) );
 		}
