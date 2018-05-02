@@ -5,8 +5,8 @@
 //
 // Es darf immer nur ein "define" aktive, d.h. nicht auskommentiert, sein.
 //
-#define V1_Aufgabe_1
-//#define V1_Aufgabe_2
+//#define V1_Aufgabe_1
+#define V1_Aufgabe_2
 //#define V1_Aufgabe_3
 //
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -16,13 +16,14 @@
 
 void emain(void* arg) 
 {
-	long int zahl1;
-	long int zahl2;
-	long int ergebnis;
+    unsigned short int zahl1;
+    unsigned short int zahl2;
+    unsigned short int ergebnis;
     int i;
 	char string_1[100];
 	char string_2[100];
     int schleife=1;
+    int laenge;
 
 	
 	INIT_BM_WITHOUT_REGISTER_UI;
@@ -48,16 +49,82 @@ void emain(void* arg)
     }
     }
     while(schleife==1);
-	zahl1=stringtoi(string_1);
+    laenge=strlen(string_1);
+    switch(laenge){
+    case 1:
+        zahl1=string_1[0]-48;
+        break;
+    case 2:
+        zahl1=10*(string_1[0]-48)+string_1[1]-48;
+        break;
+    case 3:
+        zahl1=100*(string_1[0]-48)+10*(string_1[1]-48)+string_1[2]-48;
+        break;
+    case 4:
+        zahl1=1000*(string_1[0]-48)+100*(string_1[1]-48)+10*(string_1[2]-48)+string_1[3]-48;
+    }
+    //zahl1=stringtoi(string_1);
+schleife=1;
+    do{
+    putstring("Bitte 2. Zahl eingeben:\n");
+    getstring(string_1);
+    if(strlen(string_1)<5){
 
+        for(i=0;i<strlen(string_1);i++){
 
-	putstring("Bitte 2. Zahl eingeben:\n");
-	getstring(string_1);
-	zahl2=stringtoi(string_1);
+            if((string_1[i]>=0x30)&&(string_1[i]<=0x39)){schleife=0;}
+            else{
+                putstring("Sie haben Keine Zahl eingegeben!\n");
+                schleife=1;
+                break;
+            }
+        }
 
-	ergebnis= zahl1 * zahl2;
+    }
+    else{
+        putstring("Sie haben die Maximale Anzahl von Dezimalstellen ueberschritten!\n");
+    }
+    }
+    while(schleife==1);
 
-	itostring(ergebnis, string_1);
+    laenge=strlen(string_1);
+    switch(laenge){
+    case 1:
+        zahl2=string_1[0]-48;
+        break;
+    case 2:
+        zahl2=10*(string_1[0]-48)+string_1[1]-48;
+        break;
+    case 3:
+        zahl2=100*(string_1[0]-48)+10*(string_1[1]-48)+string_1[2]-48;
+        break;
+    case 4:
+        zahl2=1000*(string_1[0]-48)+100*(string_1[1]-48)+10*(string_1[2]-48)+string_1[3]-48;
+    }
+    //zahl2=stringtoi(string_1);
+
+    ergebnis= zahl1 + zahl2;
+
+    if(ergebnis<10){
+        string_1[0]=ergebnis+48;
+    }
+    if((ergebnis<100)&&(ergebnis>=10)){
+        string_1[0]=ergebnis/10+48;
+        string_1[1]=ergebnis%10+48;
+    }
+    if(ergebnis<1000&&ergebnis>=100){
+        string_1[0]=ergebnis/100+48;
+        string_1[1]=(ergebnis/10)%10+48;
+        string_1[2]=ergebnis%10+48;
+    }
+    if(ergebnis<10000&&ergebnis>=1000){
+        string_1[0]=ergebnis/1000+48;
+        string_1[1]=(ergebnis/100)%10+48;
+        string_1[2]=(ergebnis/10)%10+48;
+        string_1[3]=ergebnis%10+48;
+    }
+
+    //itostring(ergebnis, string_1);
 
 	copystring("Produkt beider Zahlen ist:\n",string_2);
 	appendstring(string_1, string_2);
