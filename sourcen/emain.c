@@ -142,6 +142,8 @@ void emain(void* arg)
 {
 	unsigned short int T1, T2;
 	unsigned short int temp, help;
+    int zaehler;
+
 
 	// Mit den folgenden beiden Defines kann bestimmt werden welche Simulations-Tools verwendet werden.
 	// Diese MUESSEN dann auch gestartet werden.
@@ -167,8 +169,8 @@ void emain(void* arg)
 											// alle anderen Bits unverändert
 											// lassen.
 
-	temp = (1 << 10) | (1 << 9);	
-	io_out16 (DIR1, ( io_in16(DIR1) |  temp) ); // Nur Bit 10 und 9 
+    temp = (1 << 10) | (1 << 9) | (1<<11) | (1<<12);
+    io_out16 (DIR1, ( io_in16(DIR1) |  temp) ); // Nur Bit 12 bis 9
 											// auf 1 (Schreiben) setzen. Alle
 											// anderen Bits unverändert
 											// lassen.
@@ -177,7 +179,7 @@ void emain(void* arg)
 
 		SYNC_SIM;		
 
-		temp = io_in16(IN1);		// Einlesen von Port 1	
+        temp = io_in16(IN1);		// Einlesen von Port 1
 
 		temp = temp >> 4;	// So oft nach rechts shiften
 							// bis das Bit 4 an der Bitstelle 0 steht.
@@ -192,7 +194,7 @@ void emain(void* arg)
 		T1 = 1 wenn Bit 4 = 1 , also wenn Taster T1 nicht betätigt.
 		Für T2 machen wir nun das Gleiche.
 		*/
-		temp = in(IN1);		// Einlesen von Port 1	
+        temp = io_in16(IN1);		// Einlesen von Port 1
 
 		temp = temp >> 5;	// So oft nach rechts shiften
 							// bis das Bit 5 an der Bitstelle 0 steht.
@@ -200,40 +202,68 @@ void emain(void* arg)
 		T2 = temp & 0x01;	// Alle Bits, bis auf Bit0 auf 0 setzen 
 							// und das Ergebnis T2 zuweisen.
 
-		if(T1 == 1) {		
-			temp = 1 << 9;	// Berechnung des Bitmusters 0x0200 						
-							// bei dem nur das Bit 9 gesetzt ist.
+     /*   if(zaehler==0){
+            temp=0x1000; //0001000000000000
+            io_out16(OUT1,temp);//setze den Pin 12 auf 1 und rest auf 0
+            zaehler++;
+            */
 
-			// Bit 9 an Port 1 auf '1' setzen.
-			help = io_in16(OUT1); 			// Aktuellen Ausgabewert einlesen ...
-			help = help |  temp;			// ... mit temp "verodern"...
-			io_out16(OUT1, ( help | temp) );	 // ... und wieder ausgeben.
-			
-			// Dies waere die kuerzere Varianten um Bit 9 zu setzen
-			// io_out16 (OUT1, ( io_in16(OUT1) |  temp) );
+
+        help=io_in16(OUT1);// Lese die werte aus und schreibe diese in help
+        temp=0x1E00;        //0001111000000000
+        help=help & temp;     //
+        help=help>>9;
+
+        if((T1 == 1)&&(T2==0)) {
+             switch(help){
+            case 0:
+                help=8;
+                break;
+            case 1:
+                help=2;
+                break;
+            case 2:
+                help=4;
+                break;
+            case 4:
+                help=8;
+                break;
+            case 8:
+                help=1;
+                break;
+            }
+
 		}
-		else {
-            temp = 1 <<9;	// Berechnung des Bitmusters 0x0200
+        else if((T1 == 0)&&(T2==1)){
+            switch(help){
+            case 0:
+                help=8;
+                break;
+            case 1:
+                help=8;
+                break;
+            case 8:
+                help=4;
+                break;
+            case 4:
+                help=2;
+                break;
+            case 2:
+                help=1;
+                break;
+            }
+        }
+        else{
+            help=help<<9;
+            help=help & 0xE1FF;//setzten den 12-9 Bit auf null; help mit 1110000111111111 verunden
+        }
 
-			temp = ~temp;	// Das Bitmuster wird bitweise
-							// invertiert, d.h. nun ist Bit 9 das
-							// einzige Bit das '0' ist.
+        help = help << 9;
+       io_out16(OUT1, help);
 
-			// Bit 9 an Port 1 wird zurueck gesetzt auf '0
-			io_out16 (OUT1, ( io_in16(OUT1) & temp) );
-			
-		}
 
-		if(T2 == 1) {		
-            temp = 1 << 10;
-			io_out16 (OUT1, ( io_in16(OUT1) |  temp) );
-		}		
-		else {
-            temp = 1 << 10;
-			temp = ~temp;
-			io_out16 (OUT1, ( io_in16(OUT1) & temp) );
-		}
-	}		
+}
+
 
 	
 	END;
