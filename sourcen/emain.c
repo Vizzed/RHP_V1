@@ -6,8 +6,9 @@
 // Es darf immer nur ein "define" aktive, d.h. nicht auskommentiert, sein.
 //
 //#define V1_Aufgabe_1
-#define V1_Aufgabe_2
-//#define V1_Aufgabe_3
+//#define V1_Aufgabe_2
+#define V1_Aufgabe_3
+
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -272,11 +273,17 @@ void emain(void* arg)
 
 
 #ifdef V1_Aufgabe_3
+#define HIGHBIT 15
+#define LOWBIT 9
+#define MASK 0x7F
 
 void emain(void* arg) 
 {
 	unsigned short int T1, T2;
-	unsigned short int temp, help;
+    unsigned short int temp, help,i;
+    unsigned short int portwert;
+    unsigned short int wert;
+    unsigned short int speicher;
 
 	// Mit den folgenden beiden Defines kann bestimmt werden welche Simulations-Tools verwendet werden.
 	// Diese MUESSEN dann auch gestartet werden.
@@ -302,8 +309,13 @@ void emain(void* arg)
 											// alle anderen Bits unverändert
 											// lassen.
 
-	temp = (1 << 10) | (1 << 9);	
-	io_out16 (DIR1, ( io_in16(DIR1) |  temp) ); // Nur Bit 10 und 9 
+    temp=0;
+    for(i=LOWBIT;i<=HIGHBIT;i++){
+        temp=temp|(1<<i);
+    }
+    io_out16 (DIR1, ( io_in16(DIR1) |  temp) );
+    //temp = (1 << 10) | (1 << 9)|(1<<11)|(1<<12);
+    //io_out16 (DIR1, ( io_in16(DIR1) |  temp) ); // Nur Bit 10 und 9
 											// auf 1 (Schreiben) setzen. Alle
 											// anderen Bits unverändert
 											// lassen.
@@ -312,7 +324,12 @@ void emain(void* arg)
 
 		SYNC_SIM;		
 
-		temp = io_in16(IN1);		// Einlesen von Port 1	
+
+        portwert =io_in16(OUT1);        //Einlesen vom OUT register und schreiben in portwert
+        wert= portwert>>LOWBIT;         //portwert um die WERT des LOWBITS verschieben und im wert speichern
+        wert=wert & MASK;               //wert mit der Maske verunden
+
+        temp = io_in16(IN1);		// Einlesen von Port 1
 
 		temp = temp >> 4;	// So oft nach rechts shiften
 							// bis das Bit 4 an der Bitstelle 0 steht.
@@ -335,41 +352,39 @@ void emain(void* arg)
 		T2 = temp & 0x01;	// Alle Bits, bis auf Bit0 auf 0 setzen 
 							// und das Ergebnis T2 zuweisen.
 
-		if(T1 == 1) {		
-			temp = 1 << 9;	// Berechnung des Bitmusters 0x0200 						
-							// bei dem nur das Bit 9 gesetzt ist.
+        if((T1==1)&(T2==0)){
+            speicher=wert&0x1; //speichern des letzten  bits in speicher;
+            wert=wert>>1;       //verschieben um 1 bit sodass das mindewertige bite rausfällt
+                                //jedoch in speicher gespeichert
+            speicher=speicher<<HIGHBIT;//Speicher um den wert des HIGHBITS verschieben
+            speicher=speicher>>LOWBIT;// SPeicher um LOWBIT nach rechts schieben sodass der wert
+                                       //auf dem msb der Maske befindet
+            wert=wert|speicher;         //verodern des speichers mit dem wert BSP: 1000 mit 0011
+            wert=wert<<LOWBIT;
+            help=MASK<<LOWBIT;          //die MAske um LOWBIT verschieben sodass die BSP 0001111000000000
+            help=~help;                 // die MASKE negieren BSP 1110000111111111
+            portwert=portwert&help;     //den portwert mit help verunden damit 101000000000001
+            portwert=portwert|wert;
+        }
+        else if((T1==0)&&(T2==1)){
+            speicher=wert>>(HIGHBIT-LOWBIT);
+            wert=wert<<1;
+            wert=wert|speicher;
 
-			// Bit 9 an Port 1 auf '1' setzen.
-			help = io_in16(OUT1); 			// Aktuellen Ausgabewert einlesen ...
-			help = help |  temp;			// ... mit temp "verodern"...
-			io_out16(OUT1, ( help | temp) );	 // ... und wieder ausgeben.
-			
-			// Dies waere die kuerzere Varianten um Bit 9 zu setzen
-			// io_out16 (OUT1, ( io_in16(OUT1) |  temp) );
-		}
-		else {
-			temp = 1 << 9;	// Berechnung des Bitmusters 0x0200 
+            wert=wert<<LOWBIT;
+            help=MASK<<LOWBIT;          //die MAske um LOWBIT verschieben sodass die BSP 0001111000000000
+            help=~help;                 // die MASKE negieren BSP 1110000111111111
+            portwert=portwert&help;     //den portwert mit help verunden damit 101000000000001
+            portwert=portwert|wert;
 
-			temp = ~temp;	// Das Bitmuster wird bitweise
-							// invertiert, d.h. nun ist Bit 9 das
-							// einzige Bit das '0' ist.
-
-			// Bit 9 an Port 1 wird zurueck gesetzt auf '0
-			io_out16 (OUT1, ( io_in16(OUT1) & temp) );
-			
-		}
-
-		if(T2 == 1) {		
-			temp = 1 << 10;
-			io_out16 (OUT1, ( io_in16(OUT1) |  temp) );
-		}		
-		else {
-			temp = 1 << 10;
-			temp = ~temp;
-			io_out16 (OUT1, ( io_in16(OUT1) & temp) );
-		}
-	}		
-
+        }
+        else{
+            help=MASK<<LOWBIT;          //die MAske um LOWBIT verschieben sodass die BSP 0001111000000000
+            help=~help;                 // die MASKE negieren BSP 1110000111111111
+            portwert=portwert&help;
+        }
+        io_out16(OUT1, portwert);
+    }
 	
 	END;
 }
